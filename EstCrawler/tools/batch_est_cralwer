@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+# $Id$
+
+use strict;
+use lib 'lib', '../lib', '../../lib';
+use MT::Bootstrap;
+use MT;
+
+my $mt = MT->new or die MT->errstr;
+
+use Getopt::Long;
+my %config;
+$config{dbpath} = './db';
+Getopt::Long::GetOptions(\%config, 'help', 'dbpath=s', 'debug');
+
+use Estraier;
+$Estraier::DEBUG = 1 if $config{debug};
+
+my $db = new Database();
+$db->open($config{dbpath}, Database::DBWRITER | Database::DBCREAT)
+    or die $db->err_msg($db->error());
+my $iter = MT::Entry->load_iter({
+    status => MT::Entry::RELEASE(),
+    class => '*',
+});
+while (my $entry = $iter->()) {
+    $db->put_doc(entry_to_doc($entry), Database::PDCLEAN)
+	or warn $db->err_msg($db->error());
+}
+$db->close()
+    or die $db->err_msg($db->error());
+
+use MT::Util qw(remove_html ts2iso);
+sub entry_to_doc {
+    my ($entry) = @_;
+    my $doc = new Document();
+
+    my $title = remove_html($entry->title) || '';
+    my $author = remove_html($entry->author->nickname || $entry->author->name);
+    my $cdate = ts2iso($entry->blog, $entry->authored_on);
+    my $mdate = ts2iso($entry->blog, $entry->modified_on);
+
+    # metainfo (attribute, not searchable)
+    $doc->add_attr('@uri', $entry->permalink);
+    $doc->add_attr('@title', $title);
+    $doc->add_attr('@author', $author);
+    $doc->add_attr('@cdate', $cdate);
+    $doc->add_attr('@mdate', $mdate);
+
+    # document body (searchable)
+    $doc->add_text(remove_html($entry->text) || '');
+    $doc->add_text(remove_html($entry->text_more) || '');
+
+    # metainfo (hidden, searchable)
+    $doc->add_hidden_text($title);
+    $doc->add_hidden_text($author);
+    $doc->add_hidden_text(join(', ', map { $_->label } @{$entry->categories}) || '');
+    $doc->add_hidden_text(join(', ', $entry->tags) || '');
+    $doc->add_hidden_text(remove_html($entry->keywords) || '');
+    $doc;
+}
+
+1;

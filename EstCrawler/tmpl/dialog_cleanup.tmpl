@@ -1,0 +1,18 @@
+<mt:setvar name="screen_type" value="dialog-screen">
+<mt:setvarblock name="page_title"><__trans phrase="EstCrawler - Clean Up"></mt:setvarblock>
+<mt:include name="dialog/header.tmpl">
+<h2><__trans phrase="Not yet implemented."></h2>
+<form method="get" action="<mt:var name="script_url">">
+    <div class="actions-bar">
+        <div class="actions-bar-inner pkg actions">
+            <button
+                onclick="closeDialog(); return false"
+                name="close_button"
+                value="1"
+                type="submit"
+                title="<__trans phrase="Close">"
+                ><__trans phrase="Close"></button>
+        </div>
+    </div>
+</form>
+<mt:include name="dialog/footer.tmpl">

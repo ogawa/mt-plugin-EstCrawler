@@ -1,0 +1,11 @@
+# $Id$
+package EstCrawler::L10N::en_us;
+
+use strict;
+use base 'EstCrawler::L10N';
+use vars qw( %Lexicon );
+
+our %Lexicon = (
+);
+
+1;
