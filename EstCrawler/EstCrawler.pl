@@ -244,6 +244,10 @@ sub entry_to_doc {
     my $author = remove_html($entry->author->nickname || $entry->author->name);
     my $cdate = ts2iso($entry->blog, $entry->authored_on);
     my $mdate = ts2iso($entry->blog, $entry->modified_on);
+    my $categories = join('', map { '[' . $_->label . ']' } @{$entry->categories})
+	if $entry->categories;
+    my $tags = join('', map { '[' . $_ . ']' } $entry->tags)
+	if $entry->tags;
 
     # metainfo (attribute, not searchable)
     $doc->add_attr('@uri', $entry->permalink);
@@ -251,6 +255,10 @@ sub entry_to_doc {
     $doc->add_attr('@author', $author);
     $doc->add_attr('@cdate', $cdate);
     $doc->add_attr('@mdate', $mdate);
+    $doc->add_attr('entry_id', $entry->id);
+    $doc->add_attr('blog_id', $entry->blog_id);
+    $doc->add_attr('categories', $categories) if $categories;
+    $doc->add_attr('tags', $tags) if $tags;
 
     # document body (searchable)
     $doc->add_text(remove_html($entry->text) || '');
@@ -259,8 +267,8 @@ sub entry_to_doc {
     # metainfo (hidden, searchable)
     $doc->add_hidden_text($title);
     $doc->add_hidden_text($author);
-    $doc->add_hidden_text(join(', ', map { $_->label } @{$entry->categories}) || '');
-    $doc->add_hidden_text(join(', ', $entry->tags) || '');
+    $doc->add_hidden_text($categories || '');
+    $doc->add_hidden_text($tags || '');
     $doc->add_hidden_text(remove_html($entry->keywords) || '');
     $doc;
 }
