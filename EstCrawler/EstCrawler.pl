@@ -68,19 +68,19 @@ sub init_registry {
 		    'estraier' => {
 			label     => 'Estraier',
 			order     => 900,
-			permision => 'administer',
+			permission => 'administer',
 		    },
 		    'estraier:scanall' => {
 			label     => $plugin->translate('Scan All'),
 			dialog    => 'estraier_scanall',
 			order     => 100,
-			permision => 'administer',
+			permission => 'administer',
 		    },
 		    'estraier:cleanup' => {
 			label     => $plugin->translate('Clean Up'),
 			dialog    => 'estraier_cleanup',
 			order     => 200,
-			permision => 'administer',
+			permission => 'administer',
 		    },
 		},
 		methods => {
@@ -261,8 +261,10 @@ sub entry_to_doc {
     $doc->add_attr('tags', $tags) if $tags;
 
     # document body (searchable)
-    $doc->add_text(remove_html($entry->text) || '');
-    $doc->add_text(remove_html($entry->text_more) || '');
+    my $filters = $entry->text_filters;
+    push @$filters, '__default__' unless @$filters;
+    $doc->add_text(remove_html(MT->apply_text_filters($entry->text, $filters)) || '');
+    $doc->add_text(remove_html(MT->apply_text_filters($entry->text_more, $filters)) || '');
 
     # metainfo (hidden, searchable)
     $doc->add_hidden_text($title);
